@@ -7,6 +7,8 @@
 import rospy
 ## ROS Service Definitions 
 from std_srvs.srv import Empty, EmptyResponse
+from turtlesim.srv import TeleportAbsolute, TeleportAbsoluteRequest
+from turtlesim.srv import SetPen, SetPenRequest
 
 """ 
 General Description of setup
@@ -14,13 +16,76 @@ General Description of setup
 # Where the bulk of the work happens
 class Setup:
     def __init__(self):
+        """
+        Doc for constructor
+        """
+        self.draw_service = rospy.Service("draw", Empty, self.draw_handeler)
+        self.reset_client = rospy.ServiceProxy("reset", Empty)
+        self.teleport_client = rospy.ServiceProxy("turtle1/teleport_absolute",
+            TeleportAbsolute)
+        self.pen_client = rospy.ServiceProxy("turtle1/set_pen", SetPen)
+        self.pen = SetPenRequest(r=255, g=255, b=255, width=2, off=1)
+
+    def draw_handeler(self, req):
+        """
+        Doc for handeler
+        """
+        rospy.wait_for_service('reset')
+        try:
+            self.reset_client()
+        except rospy.ServiceException as e:
+            print(f"Reset service call failed: {e}")
+            rospy.logerr(e)
+
+        #Grab waypoints
         self.waypoints = rospy.get_param("turtle_control/waypoints")
-        for p in self.waypoints:
-            print(p)
-            rospy.loginfo(p)
+
+        #Expand waypoints into X pattern
+        x_points = [pt for pt in self.draw_Xs(self.waypoints)]
+
+        for pt in x_points:
+            #Drawing X's with turtle
+            rospy.wait_for_service('turtle1/set_pen')
+            try:
+                self.pen_client(self.pen)
+                if self.pen.off == 0:
+                    self.pen.off = 1
+                else:
+                    self.pen.off = 0
+            except rospy.ServiceException as e:
+                print(f"Pen service call failed: {e}")
+                rospy.logerr(e)
+
+            #Instant Transmission of turtle!
+            rospy.wait_for_service('turtle1/teleport_absolute')
+            try:
+                location = TeleportAbsoluteRequest(x=pt[0], y=pt[1])
+                self.teleport_client(location)
+            except rospy.ServiceException as e:
+                print(f"Teleport Absolution call failed: {e}")
+                rospy.logerr(e)
+            
+        return EmptyResponse()
+
+    def draw_Xs(self, waypoints, size=.1):
+        """
+        """
+        rtn_list = []
+        for way_pts in waypoints:
+            x, y = way_pts
+            rtn_list.append([x - size, y + size]) 
+            rtn_list.append([x + size, y - size])
+            rtn_list.append([x + size, y + size])
+            rtn_list.append([x - size, y - size])
+        return rtn_list
+
+
 
 #Activate 'setup' node
 def main():
+    """
+    Doc for main function
+    """
     rospy.init_node('setup')
     setup = Setup()
     rospy.spin()
