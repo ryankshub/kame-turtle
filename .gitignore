@@ -1,0 +1,8 @@
+#GitIgnore 
+
+# Compiled files
+*.zip
+
+
+# Binary files
+*.pyc
