@@ -5,7 +5,6 @@
 
 # 3rd-party imports
 import rospy
-## ROS Service Definitions 
 from std_srvs.srv import Empty, EmptyResponse
 from turtlesim.srv import TeleportAbsolute, TeleportAbsoluteRequest
 from turtlesim.srv import SetPen, SetPenRequest

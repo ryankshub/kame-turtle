@@ -1,0 +1,45 @@
+#!/usr/bin/env python3
+
+# Project imports
+from turtle_control.msg import TurtleVelocity
+# Python imports
+
+# 3rd-party imports
+import rospy
+
+from geometry_msgs.msg import Twist, Vector3
+
+
+class Translate:
+    """
+    """
+    def __init__(self):
+        """
+        """
+        self.sub = rospy.Subscriber('turtle_cmd', TurtleVelocity, self.vel_converter)
+        self.pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
+
+    def vel_converter(self, turtle_2d_vel):
+        """
+        """
+        #Log message as a debug message
+        rospy.logdebug(f"2D velocity: {turtle_2d_vel}")
+        linear_3d_vel = Vector3(x=turtle_2d_vel.linear)
+        angular_3d_vel = Vector3(z=turtle_2d_vel.angular)
+        turtle_3d_vel = Twist(linear=linear_3d_vel, angular=angular_3d_vel)
+        self.pub.publish(turtle_3d_vel)
+        rospy.logdebug(f"3D velocity: {turtle_3d_vel}")
+
+
+#Activate 'translate' node
+def main():
+    rospy.init_node('translate')
+    translate = Translate()
+    rospy.spin()
+
+# Main Execution loop
+if __name__ == "__main__":
+    try:
+        main()
+    except rospy.ROSInterruptException:
+        pass
