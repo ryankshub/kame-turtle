@@ -96,7 +96,7 @@ If the nodes launched from the `launchfile` are not running, you will get incorr
    ``` 
 to call the `/switch` service. **Note**: When calling the command, fill the `{float32}` values with float numbers. 
 
-   The command returns `x: {float32}, y: {float32}` and the turtle `teleports to the location and attempts executes the command. This can be difficult to see given the erratic movements of the turtle`
+   The command returns `x: {float32}, y: {float32}` and the turtle `changes to a new turtle placed at a new location. It looks like the new_x is old_x*angular_velocity and new_y is old_y*linear_velocity. `
     (Hint: use `rossrv info` on the type of the `/switch` service to see the parameters.
      To test the behavior, look at the code or try calling with `x = 1`, `y = 1`, once with `linear_velocity = 0` and `angular_velocity = 0` and once with these at different nonzero values.)
 
