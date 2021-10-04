@@ -63,7 +63,7 @@ class Setup:
             except rospy.ServiceException as e:
                 print(f"Teleport Absolution call failed: {e}")
                 rospy.logerr(e)
-            
+        
         return EmptyResponse()
 
     def draw_Xs(self, waypoints, size=.1):

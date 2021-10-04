@@ -1,0 +1,93 @@
+#!/usr/bin/env python3
+# Internal Package imports
+from turtle_control.srv import Start, StartResponse
+# Python imports
+
+# 3rd-party imports
+import rospy
+from turtlesim.msg import Pose
+from turtlesim.srv import TeleportAbsolute, TeleportAbsoluteRequest
+from turtlesim.srv import SetPen, SetPenRequest
+from std_srvs.srv import Empty
+
+
+
+class Follow:
+    """
+    """
+    def __init__(self):
+        """
+        """
+        # Subscribers
+        self.pose_sub = rospy.Subscriber("turtle1/pose", Pose, self.pose_handler)
+        #Publishers
+        #Services
+        self.restart_service = rospy.Service("restart", Start, self.start_handler)
+        #Clients
+        self.draw_client = rospy.ServiceProxy("draw", Empty)
+        self.teleport_client = rospy.ServiceProxy("turtle1/teleport_absolute",
+            TeleportAbsolute)
+        self.pen_client = rospy.ServiceProxy("turtle1/set_pen", SetPen)
+        #Client Objects
+        self.pen = SetPenRequest(off=1)
+        #Parameters
+        self.waypoints = rospy.get_param("turtle_control/waypoints")
+        self.dist_thresh = rospy.get_param("turtle_control/~dist_thresh")
+        self.boundary = 11 # limit on x and y for starting position
+
+    def pose_handler(self, data):
+        """
+        """
+        print(data)
+
+    def start_handler(self, req):
+        """
+        """
+        origin_x = req.x
+        origin_y = req.y
+        # Check origin for bounds
+        if not self.within_bounds(origin_x, origin_y):
+            rospy.logerr(f"Starting point {origin_x},{origin_y} is out of bounds")
+            return None
+        # Call draw service to set up waypoint path
+        self.draw_client()
+        # Set the turtle in starting position and turn off pen
+        rospy.wait_for_service("turtle1/set_pen")
+        try:
+            self.pen_client(self.pen)
+        except rospy.ServiceException as e:
+            print(f"Pen service call failed: {e}")
+            rospy.logerr(e)
+        
+        rospy.wait_for_service("turtle1/teleport_absolute")
+        try:
+            location = TeleportAbsoluteRequest(x=origin_x, y=origin_y)
+            self.teleport_client(location)
+        except rospy.ServiceException as e:
+            print(f"Teleport Absolution call failed: {e}")
+            rospy.logerr(e)
+
+
+
+    def within_bounds(self,x,y):
+        """
+        """
+        if x < 0 or x > self.boundary or y < 0 or y > self.boundary:
+            return False
+        return True
+
+
+#Activate 'translate' node
+def main():
+    """
+    """
+    rospy.init_node('follow')
+    follow = Follow()
+    rospy.spin()
+
+# Main Execution loop
+if __name__ == "__main__":
+    try:
+        main()
+    except rospy.ROSInterruptException:
+        pass

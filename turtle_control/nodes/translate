@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Project imports
+# Internal Package imports
 from turtle_control.msg import TurtleVelocity
 # Python imports
 

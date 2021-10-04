@@ -1,0 +1,6 @@
+# Start srv type
+# Given the starting location of (x, y), return the distance the turtle travels to finish the waypoints
+float64 x # x of origin (in m)
+float64 y # y of origin (in m)
+---
+float64 distance #(in m)
