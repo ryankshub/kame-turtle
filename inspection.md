@@ -12,7 +12,7 @@ Unless otherwise specified, list the command and all arguments that you passed t
 3. Run the launchfile `launch directory` by executing `roslaunch crazy_turtle go_crazy_turtle.launch`
 4. When running you can see a visual depiction of the ROS graph using the `rqt_graph` command.
    The ROS graph, including all topics and node labels, looks like:
-   ![Crazy_turtle_graph](images/crazy_turtle_graph.png)
+   ![Crazy_turtle_graph](media/crazy_turtle_graph.png)
 
 ## Runtime Information
 The `launchfile` from above should be running at all times when executing these commands.
@@ -104,4 +104,4 @@ to call the `/switch` service. **Note**: When calling the command, fill the `{fl
 15. What happens to the turtle's motion if you change `/mover/velocity` to 10 while the turtlesim and mover node are running? It stays the same
 16. Use the ROS command `rosnode kill /mover` to kill the `/mover` node.
 17. Use the ROS command `rosrun crazy_turtle mover /cmd_vel:=/turtle1/cmd_vel` to start the `/mover` node. Be sure to remap `cmd_vel` to `/turtle1/cmd_vel`.
-18. What happened to the turtle's velocity after relaunching `mover`? `The turtle moves faster `
+18. What happened to the turtle's velocity after relaunching `mover` ?  `The turtle moves faster `
