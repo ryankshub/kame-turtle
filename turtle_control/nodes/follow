@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 # Internal Package imports
 from turtle_control.srv import Start, StartResponse
+from turtle_control.msg import TurtleVelocity
 # Python imports
-
+from collections import deque
+import math
 # 3rd-party imports
 import rospy
 from turtlesim.msg import Pose
@@ -18,9 +20,18 @@ class Follow:
     def __init__(self):
         """
         """
+        #Parameters
+        self.waypoints = rospy.get_param("turtle_control/waypoints")
+        self.dist_thresh = rospy.get_param("dist_thresh")
+        self.angle_thresh = rospy.get_param("angle_thresh")
+        self.boundary = 11 # limit on x and y for starting position
+        self.mosey = False # bool to tell turtle to waypoint follow 
+        self.moving = False # state to determine if we were moving
+        self.travel_queue = None #travel queue
         # Subscribers
         self.pose_sub = rospy.Subscriber("turtle1/pose", Pose, self.pose_handler)
         #Publishers
+        self.vel_pub = rospy.Publisher("turtle_cmd", TurtleVelocity, queue_size=10)
         #Services
         self.restart_service = rospy.Service("restart", Start, self.start_handler)
         #Clients
@@ -30,35 +41,82 @@ class Follow:
         self.pen_client = rospy.ServiceProxy("turtle1/set_pen", SetPen)
         #Client Objects
         self.pen = SetPenRequest(off=1)
-        #Parameters
-        self.waypoints = rospy.get_param("turtle_control/waypoints")
-        self.dist_thresh = rospy.get_param("turtle_control/~dist_thresh")
-        self.boundary = 11 # limit on x and y for starting position
+        
+
 
     def pose_handler(self, data):
         """
         """
-        print(data)
+        # If turtle is signaled to move
+        if self.mosey:
+            # Check if we were already moving
+            # If not, init travel queue
+            if not self.moving:
+                self.moving = True
+                filtered_path = self.filter_path(self.waypoints)
+                # filter out-of-bounds waypoints
+                if len(filtered_path) == 0:
+                    rospy.logerr("All waypoints are out of bounds. ",
+                        "Turtle will has no path")
+                    return
+                self.travel_queue = deque(filtered_path)
+            # Grab location, goal, and distance between
+            loc = [data.x, data.y]
+            heading = None
+            if data.theta < 0:
+                heading = data.theta + 2*math.pi
+            else:
+                heading = data.theta
+            goal = self.travel_queue[0]
+            dist = self.calc_dist(loc, goal)
+            # If we've arrived, get new goal point
+            if (dist <= self.dist_thresh):
+                self.travel_queue.rotate(-1)
+            # If not, sent velocity and angular command
+            else:
+                # angular vel
+                target_bearing = self.calc_bearing(loc, goal)
+                bearing_err= self.calc_bearing_err(heading, target_bearing)
+                ang_vel = self.kp_vel_control(bearing_err, gain=3.0)
+                # linear vel
+                x_vel = 0
+                if bearing_err == 0:
+                    x_vel = self.kp_vel_control(dist, gain=10)
 
+                #publish vel
+                vel_cmd = TurtleVelocity(linear=x_vel, angular=ang_vel)
+                self.vel_pub.publish(vel_cmd)
+        # Not cleared to move
+        else:
+            self.moving = False
+            self.travel_queue = None
+
+            
     def start_handler(self, req):
         """
         """
+        self.mosey = False
         origin_x = req.x
         origin_y = req.y
+
         # Check origin for bounds
         if not self.within_bounds(origin_x, origin_y):
-            rospy.logerr(f"Starting point {origin_x},{origin_y} is out of bounds")
+            rospy.logerr(f"Starting point {origin_x},{origin_y} is "
+                "out of bounds")
             return None
+
         # Call draw service to set up waypoint path
         self.draw_client()
-        # Set the turtle in starting position and turn off pen
-        rospy.wait_for_service("turtle1/set_pen")
-        try:
-            self.pen_client(self.pen)
-        except rospy.ServiceException as e:
-            print(f"Pen service call failed: {e}")
-            rospy.logerr(e)
+
+        # Turn off pen
+        # rospy.wait_for_service("turtle1/set_pen")
+        # try:
+        #     self.pen_client(self.pen)
+        # except rospy.ServiceException as e:
+        #     print(f"Pen service call failed: {e}")
+        #     rospy.logerr(e)
         
+        # Set turtles starting position
         rospy.wait_for_service("turtle1/teleport_absolute")
         try:
             location = TeleportAbsoluteRequest(x=origin_x, y=origin_y)
@@ -67,14 +125,103 @@ class Follow:
             print(f"Teleport Absolution call failed: {e}")
             rospy.logerr(e)
 
+        #Grab waypoints and calculate distance
+        rtn_dist = self.calc_dist_list(self.waypoints)
+        #Tell Turtle to move
+        self.mosey = True
+        #Return distance
+        resp = StartResponse(distance=rtn_dist)
+        return resp
 
 
-    def within_bounds(self,x,y):
+    def within_bounds(self, *args):
         """
         """
+        if len(args) == 2:
+            x = args[0]
+            y = args[1]
+        elif len(args) == 1:
+            x = args[0][0]
+            y = args[0][1]
+        else:
+            return False
+
         if x < 0 or x > self.boundary or y < 0 or y > self.boundary:
             return False
         return True
+
+
+    def calc_dist(self, origin, dest):
+        """
+        """
+        return math.dist(origin, dest)
+
+
+    def calc_bearing(self, origin, dest):
+        """
+        """
+        x = dest[0] - origin[0]
+        y = dest[1] - origin[1]
+        bearing = math.atan2(y,x)
+        if bearing < 0:
+            bearing += 2*math.pi
+        return bearing
+
+
+    def calc_bearing_err(self, cur_bearing, goal_bearing):
+        """
+        """
+        bearing_diff = goal_bearing - cur_bearing
+        # If we're close enough, stop turning
+        if (abs(bearing_diff) < 3*self.angle_thresh):
+            return 0
+        else:
+            return bearing_diff
+
+
+    def calc_dist_list(self, waypoints):
+        """
+        """
+        dist = 0
+        #Set list markers
+        o_mark = 0
+        d_mark = 1
+        while(d_mark < (len(waypoints)-1)):
+            # Current point is out of bounds, skip it 
+            if not self.within_bounds(waypoints[o_mark]):
+                o_mark += 1
+                d_mark = o_mark + 1
+                continue
+            # Next point is out of bounds, skip it
+            elif not self.within_bounds(waypoints[d_mark]):
+                d_mark += 1
+                continue
+            # Calculate dist and update points
+            else:
+                dist += self.calc_dist(waypoints[o_mark], waypoints[d_mark])
+                o_mark = d_mark
+                d_mark = o_mark + 1
+        return dist
+
+
+    def kp_vel_control(self, error, gain=0.5):
+        """
+        """
+        return error*gain
+
+
+    def filter_path(self,waypoint_list):
+        """
+        """
+        filtered_path = []
+        for pt in waypoint_list:
+            if self.within_bounds(pt):
+                filtered_path.append(pt)
+            else:
+                rospy.logwarn(f"Point {pt} is kicked off path for being "
+                    "out of bounds")
+        return filtered_path
+
 
 
 #Activate 'translate' node
@@ -84,6 +231,7 @@ def main():
     rospy.init_node('follow')
     follow = Follow()
     rospy.spin()
+
 
 # Main Execution loop
 if __name__ == "__main__":

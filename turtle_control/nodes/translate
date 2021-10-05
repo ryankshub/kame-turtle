@@ -17,7 +17,7 @@ class Translate:
         """
         """
         self.sub = rospy.Subscriber('turtle_cmd', TurtleVelocity, self.vel_converter)
-        self.pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
+        self.pub = rospy.Publisher('turtle1/cmd_vel', Twist, queue_size=10)
 
     def vel_converter(self, turtle_2d_vel):
         """
