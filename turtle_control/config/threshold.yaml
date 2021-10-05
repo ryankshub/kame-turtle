@@ -1,0 +1,4 @@
+#Yaml file for turtle control waypoints
+  
+dist_thresh: 0.05 # Internal Distance threshold hold. DO NOT EDIT
+angle_thresh: 0.052359 # Internal Angular threshold. DO NOT EDIT

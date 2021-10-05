@@ -60,8 +60,8 @@ class Follow:
         """
         #Parameters
         self.waypoints = rospy.get_param("turtle_control/waypoints")
-        self._dist_thresh = rospy.get_param("dist_thresh")
-        self._angle_thresh = rospy.get_param("angle_thresh")
+        self._dist_thresh = rospy.get_param("~dist_thresh")
+        self._angle_thresh = rospy.get_param("~angle_thresh")
         self._boundary = 11 # limit on x and y for starting position
         self._mosey = False # bool to tell turtle to waypoint follow 
         self._moving = False # state to determine if we were moving

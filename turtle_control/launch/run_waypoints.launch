@@ -4,5 +4,7 @@
     <node name="turtlesim_node" pkg="turtlesim" type="turtlesim_node"/>
     <node name="setup" pkg="turtle_control" type="setup"/>
     <node name="translate" pkg="turtle_control" type="translate"/>
-    <node name="follow" pkg="turtle_control" type="follow"/>
+    <node name="follow" pkg="turtle_control" type="follow">
+        <rosparam command="load" file="$(find turtle_control)/config/threshold.yaml"/>
+    </node>
 </launch>
