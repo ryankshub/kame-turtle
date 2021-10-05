@@ -1,6 +1,6 @@
 #Yaml file for turtle control waypoints
 
-turtle_control:
+turtle_control: #List of waypoint [x.y] for turtle to follow
   waypoints: [[1,2], [3,4], [5,6], [7,8], [1,9], [7,2]]
-dist_thresh: 0.05
-angle_thresh: 0.017453
+dist_thresh: 0.05 # Internal Distance threshold hold. DO NOT EDIT
+angle_thresh: 0.052359 # Internal Angular threshold. DO NOT EDIT

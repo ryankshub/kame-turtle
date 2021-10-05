@@ -1,26 +1,45 @@
 #!/usr/bin/env python3
+#Translate Node
+#RKS
 
-# Internal Package imports
+# Project imports(with-in package imports)
 from turtle_control.msg import TurtleVelocity
 # Python imports
 
 # 3rd-party imports
 import rospy
-
 from geometry_msgs.msg import Twist, Vector3
 
 
 class Translate:
     """
+    ROS Node responsible for converting 2d velocity commands into the 3d 
+    velocity commands turtlesim uses. 
+
+    PUBLISHERS:
+        + turtle1/cmd_vel Twist ~ 3D velocity command for turtlesim
+    SUBSCRIBERS:
+        + turtle_cmd ~ 2D velocity command with linear and angular velocity
     """
+
     def __init__(self):
         """
+        Constructor for ROS Node Translate class. Creates the publishers and 
+        subscriber
         """
         self.sub = rospy.Subscriber('turtle_cmd', TurtleVelocity, self.vel_converter)
         self.pub = rospy.Publisher('turtle1/cmd_vel', Twist, queue_size=10)
 
     def vel_converter(self, turtle_2d_vel):
         """
+        Callback for the turtle_cmd subscriber
+
+        Args:
+        TurtleVelocity turtle_2d_vel ~ linear and angular velocity commands
+
+        Publishes:
+        Twist turtle_3d_vel ~ 3D velocity and angular commands read by 
+            turtlesim
         """
         #Log message as a debug message
         rospy.logdebug(f"2D velocity: {turtle_2d_vel}")
@@ -33,6 +52,9 @@ class Translate:
 
 #Activate 'translate' node
 def main():
+    """
+    Main execution loop for translate node
+    """
     rospy.init_node('translate')
     translate = Translate()
     rospy.spin()
@@ -41,5 +63,6 @@ def main():
 if __name__ == "__main__":
     try:
         main()
+    #If something kills this node, have it die
     except rospy.ROSInterruptException:
         pass

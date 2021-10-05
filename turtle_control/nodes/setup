@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-# Project imports
+#Setup Node
+#RKS
+
+# Project imports (with-in package imports)
 
 # Python imports
 
@@ -9,14 +12,32 @@ from std_srvs.srv import Empty, EmptyResponse
 from turtlesim.srv import TeleportAbsolute, TeleportAbsoluteRequest
 from turtlesim.srv import SetPen, SetPenRequest
 
-""" 
-General Description of setup
-"""
+
 # Where the bulk of the work happens
 class Setup:
+    """
+    ROS Node responsible for cleaning turtlesim and drawing waypoint Xs. 
+    Creates a service listening for a 'draw' call. Uses service to clear
+    turtlesim, teleport turtle, and control pen. 
+
+    SERVICES:
+        + draw Empty ~ triggers waypoint drawing. First the service request
+        the turtlesim is cleaned and then teleports the turtle across the 
+        board in order to draw Xs at waypoint locations. 
+
+    CLIENTS (ServiceProxys):
+        + reset Empty ~ request for turtlesim board to be reset
+
+        + turtle1/teleport_absolute TeleportAbsolute ~ request to move turtle
+            to various location while drawing Xs
+
+        + turtle1/set_pen SetPen ~ request to turn pen on and off to draw Xs
+    """
+
     def __init__(self):
         """
-        Doc for constructor
+        Constructor for ROS Node Setup class. Creates all ROS 
+        interfaces(service and service proxies).
         """
         self.draw_service = rospy.Service("draw", Empty, self.draw_handeler)
         self.reset_client = rospy.ServiceProxy("reset", Empty)
@@ -25,10 +46,23 @@ class Setup:
         self.pen_client = rospy.ServiceProxy("turtle1/set_pen", SetPen)
         self.pen = SetPenRequest(r=255, g=255, b=255, width=2, off=1)
 
+
     def draw_handeler(self, req):
         """
-        Doc for handeler
+        Service handler for `draw` service
+
+        Args:
+        Empty req ~ request to trigger service. Contains no data
+
+        Rtn:
+        EmptyResponse ~ response to indicate waypoints are drawn. 
+            Contains no data
+        
+        Throws:
+        rospy.ServiceException ~ if any calls fail for reset, turtle1/pen, or 
+            turtle1/teleport_absolute service. 
         """
+        # Request to reset turtlesim
         rospy.wait_for_service('reset')
         try:
             self.reset_client()
@@ -77,22 +111,31 @@ class Setup:
 
     def draw_Xs(self, waypoints, size=.1):
         """
+        Given a waypoint list, produce a list of points to draw Xs
+
+        Args:
+        list waypoints ~ a list of waypoints [x,y]
+        float size ~ the size of the Xs, default is .1
+
+        Rtn:
+        list xpts_list ~ a list of points representing the Xs for each
+            waypoint
         """
-        rtn_list = []
+        xpts_list = []
         for way_pts in waypoints:
             x, y = way_pts
-            rtn_list.append([x - size, y + size]) 
-            rtn_list.append([x + size, y - size])
-            rtn_list.append([x + size, y + size])
-            rtn_list.append([x - size, y - size])
-        return rtn_list
+            xpts_list.append([x - size, y + size]) 
+            xpts_list.append([x + size, y - size])
+            xpts_list.append([x + size, y + size])
+            xpts_list.append([x - size, y - size])
+        return xpts_list
 
 
 
 #Activate 'setup' node
 def main():
     """
-    Doc for main function
+    Main execution loop for setup node
     """
     rospy.init_node('setup')
     setup = Setup()
@@ -102,5 +145,6 @@ def main():
 if __name__ == "__main__":
     try:
         main()
+    #If something kills this node, have it die
     except rospy.ROSInterruptException:
         pass
