@@ -8,7 +8,7 @@ Author: **Ryan King-Shepard**
 Edited to fill in `${ITEM}` blanks. 
 * `mover` - Node from [crazy_turtle respository](https://github.com/m-elwin/crazy_turtle). 
 Edited to fill in `{?}`.
-* `turtle_control` - Custom ROS package of interest and what the bulk of the this README will cover.
+* `turtle_control` - Custom ROS package of interest and what the bulk of the this [README](turtle_control/README.md) will cover.
 
 ## Turtle Control Package
 
