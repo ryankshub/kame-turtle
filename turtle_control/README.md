@@ -16,7 +16,8 @@ This package contains:
 - srv:
     * `Start.srv` ~ Request a staring location x, y and receive the distance the turtle will     travel along waypoint path. 
 - config:
-    * `waypoint.yaml` ~ Definitions of ros params used by service. Edit waypoint path here. 
+    * `waypoint.yaml` ~ Contains waypoint list parameter. Edit waypoint path here. 
+    * `threshold.yaml` ~ Definitions of distance and angular thresholds. 
 - launch:
     * `run_waypoints.launch` ~ Launch file to start all nodes
 - `waypoint.bag` 
