@@ -64,6 +64,15 @@ class Setup:
                 print(f"Teleport Absolution call failed: {e}")
                 rospy.logerr(e)
         
+        # Turn pen off when done
+        self.pen.off = 1
+        rospy.wait_for_service('turtle1/set_pen')
+        try:
+            self.pen_client(self.pen)
+        except rospy.ServiceException as e:
+            print(f"Pen service call failed: {e}")
+            rospy.logerr(e)
+            
         return EmptyResponse()
 
     def draw_Xs(self, waypoints, size=.1):
