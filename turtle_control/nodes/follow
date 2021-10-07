@@ -109,12 +109,7 @@ class Follow:
                 self._travel_queue = deque(filtered_path)
             # Grab location, goal, and distance between
             loc = [data.x, data.y]
-            heading = None
-            # Adjust theta to be from 0 to 2pi
-            if data.theta < 0:
-                heading = data.theta + 2*math.pi
-            else:
-                heading = data.theta
+            heading = data.theta
             goal = self._travel_queue[0]
             dist = self.calc_dist(loc, goal)
             # If we've arrived, get new goal point
@@ -256,13 +251,11 @@ class Follow:
         
         Rtn:
         float bearing ~ angle from origin to destination in radians and in
-            range [0, 2pi]
+            range (-pi, pi]
         """
         x = dest[0] - origin[0]
         y = dest[1] - origin[1]
         bearing = math.atan2(y,x)
-        if bearing < 0:
-            bearing += 2*math.pi
         return bearing
 
 
@@ -282,6 +275,10 @@ class Follow:
             waypoint.yaml as angle_thresh. 
         """
         bearing_diff = goal_bearing - cur_bearing
+        if (bearing_diff > math.pi):
+            bearing_diff = bearing_diff - 2*math.pi
+        elif(bearing_diff < -math.pi):
+            bearing_diff = bearing_diff + 2*math.pi
         # If we're close enough, stop turning
         if (abs(bearing_diff) < self._angle_thresh):
             return 0
