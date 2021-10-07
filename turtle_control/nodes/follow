@@ -265,9 +265,9 @@ class Follow:
 
         Arg:
         float cur_bearing ~ angle of current heading in radians and range
-            [0, 2pi]
+            (-pi, pi]
         flaot goal_bearing ~ angle of target heading in radians and range
-            [0, 2pi]
+            (-pi, pi]
 
         Rtn:
         float error ~ error of the two angles. Note, if error is within 
