@@ -9,8 +9,8 @@ project(turtle_control)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   message_generation
-  message_runtime
   std_msgs
+  std_srvs
   turtlesim
 )
 
@@ -104,7 +104,7 @@ generate_messages(
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES turtle_control
-#  CATKIN_DEPENDS message_generation message_runtime std_msgs turtlesim
+  CATKIN_DEPENDS message_runtime std_msgs std_srvs turtlesim
 #  DEPENDS system_lib
 )
 
@@ -158,10 +158,10 @@ include_directories(
 
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
-# catkin_install_python(PROGRAMS
-#   scripts/my_python_script
-#   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
+ catkin_install_python(PROGRAMS
+   nodes/follow nodes/translate nodes/setup
+   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+ )
 
 ## Mark executables for installation
 ## See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_executables.html

@@ -1,0 +1,41 @@
+17.8/18
+To see my changes: use git diff --word-diff main graded
+To merge my changes: (from main branch) git merge graded
+To delete graded branch locally: git branch -d graded
+To delete graded branch remotely: git push -d origin graded
+
+
+
+Guidelines: 2/2
+README.md has your name?
+README.md Uses Markdown properly?
+
+repository structure correct?
+
+.vscode not in repository?    
+.pyc files not in repository?
+build/ devel in repository?
+
+
+    
+Part 1:        5/5
+inspection.md  
+nodes/mover
+
+
+Part 2 Turtle Control 10.8/11
+1. catkin_lint (several warnings and errors) -0.2
+   Note: rospy is not a build depend: it is imported at runtime and does not have any messages
+   need to call catkin_install_python() on your nodes 
+2. catkin_make
+3. roslaunch turtle_control run_waypoints.launch
+4. rosservice call /draw "{}"
+5. rosservice call /restart "x: 8.0 y: 5.0"
+6. rosservice call /restart "x: 2.0 y: 2.0"
+
+nodes/follow:
+nodes/setup
+launch/run_waypoints.launch
+    dist_thresh is set?
+    waypoints are loaded?
+package.xml
